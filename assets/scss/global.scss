@@ -1,15 +1,20 @@
-h2, p {
-    margin: 10px 0;
-}
-header {
-    margin-bottom: 40px;
-}
-.tip {
-    padding: 10px;
+.nav {
     background: #333;
-    color: #fff;
 }
-.tip .delete {
-    color: hotpink;
-    font-size: .8em;
+button {
+    background: #333 !important;
+    margin-bottom: 20px;
+    width: 100%;
+    padding: 16px;
+    font-size: 1.6em;
+    color: #fff;
+    border: 0;
+    border-radius: 4px;
+    cursor: pointer;
+}
+button.active{
+    background: #00bfa5 !important;
+}
+form span{
+    color: #00bfa5 !important;
 }
