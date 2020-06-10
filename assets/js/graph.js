@@ -32,6 +32,39 @@ const xAxisGroup = graph
 
 const yAxisGroup = graph.append("g").attr("class", "y-axis");
 
+// d3 line generator
+const line = d3
+  .line()
+  .x(function (d) {
+    return x(new Date(d.date));
+  })
+  .y(function (d) {
+    return y(d.distance);
+  });
+
+// line path elements
+const path = graph.append("path");
+
+// create dotted line and append to graph
+const dottedLines = graph
+  .append("g")
+  .attr("class", "lines")
+  .style("opacity", 0);
+
+// create x dotted line and append to dotted line group
+const xDottedLine = dottedLines
+  .append("line")
+  .attr("stroke", "#aaa")
+  .attr("stroke-width", 1)
+  .attr("stroke-dasharray", 4);
+
+// create x dotted line and append to dotted line group
+const yDottedLine = dottedLines
+  .append("line")
+  .attr("stroke", "#aaa")
+  .attr("stroke-width", 1)
+  .attr("stroke-dasharray", 4);
+
 // react to changes on firestore
 db.collection("activities").onSnapshot((res) => {
   res.docChanges().forEach((change) => {
@@ -60,11 +93,22 @@ db.collection("activities").onSnapshot((res) => {
 const update = (data, activityType = "cycling") => {
   data = data.filter((item) => item.activity === activityType);
 
+  //sort data based on date objects
+  data.sort((a, b) => new Date(a.date) - new Date(b.date));
+
   console.log(data);
 
   // set scale domains
   x.domain(d3.extent(data, (d) => new Date(d.date)));
   y.domain([0, d3.max(data, (d) => d.distance)]);
+
+  // update path data
+  path
+    .data([data])
+    .attr("fill", "none")
+    .attr("stroke", "#00bfa5")
+    .attr("stroke-width", 2)
+    .attr("d", line);
 
   // create circles for objects
   const circles = graph.selectAll("circle").data(data);
@@ -85,6 +129,39 @@ const update = (data, activityType = "cycling") => {
     .attr("cx", (d) => x(new Date(d.date)))
     .attr("cy", (d) => y(d.distance))
     .attr("fill", "#ccc");
+
+  graph
+    .selectAll("circle")
+    .on("mouseover", (d, i, n) => {
+      d3.select(n[i])
+        .transition()
+        .duration(100)
+        .attr("r", 8)
+        .attr("fill", "#fff");
+
+      xDottedLine
+        .attr("x1", x(new Date(d.date)))
+        .attr("x2", x(new Date(d.date)))
+        .attr("y1", graphHeight)
+        .attr("y2", y(d.distance));
+
+      yDottedLine
+        .attr("x1", 0)
+        .attr("x2", x(new Date(d.date)))
+        .attr("y1", y(d.distance))
+        .attr("y2", y(d.distance));
+
+      dottedLines.style("opacity", 1);
+    })
+    .on("mouseleave", (d, i, n) => {
+      d3.select(n[i])
+        .transition()
+        .duration(100)
+        .attr("r", 4)
+        .attr("fill", "#ccc");
+
+      dottedLines.style("opacity", 0);
+    });
 
   // create axis
   const xAxis = d3.axisBottom(x).ticks(4).tickFormat(d3.timeFormat("%b %d"));
