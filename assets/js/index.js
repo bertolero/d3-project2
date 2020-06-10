@@ -1,3 +1,4 @@
+import { update, data } from "./graph";
 import db from "./data/firebase-utils";
 
 const btns = document.querySelectorAll("button");
@@ -20,6 +21,8 @@ btns.forEach((btn) => {
     input.setAttribute("id", activity);
 
     formAct.textContent = activity;
+
+    update(data, activity);
   });
 });
 

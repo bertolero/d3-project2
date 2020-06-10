@@ -32,7 +32,34 @@ const xAxisGroup = graph
 
 const yAxisGroup = graph.append("g").attr("class", "y-axis");
 
-const update = (data) => {
+// react to changes on firestore
+db.collection("activities").onSnapshot((res) => {
+  res.docChanges().forEach((change) => {
+    const doc = { ...change.doc.data(), id: change.doc.id };
+
+    switch (change.type) {
+      case "added":
+        data.push(doc);
+        break;
+      case "modified":
+        const index = data.findIndex((item) => item.id === doc.id);
+        data[index] = doc;
+        break;
+      case "removed":
+        data = data.filter((item) => item.id !== doc.id);
+        break;
+      default:
+        break;
+    }
+  });
+
+  update(data);
+});
+
+// update function
+const update = (data, activityType = "cycling") => {
+  data = data.filter((item) => item.activity === activityType);
+
   console.log(data);
 
   // set scale domains
@@ -78,25 +105,4 @@ const update = (data) => {
     .attr("text-anchor", "end");
 };
 
-db.collection("activities").onSnapshot((res) => {
-  res.docChanges().forEach((change) => {
-    const doc = { ...change.doc.data(), id: change.doc.id };
-
-    switch (change.type) {
-      case "added":
-        data.push(doc);
-        break;
-      case "modified":
-        const index = data.findIndex((item) => item.id === doc.id);
-        data[index] = doc;
-        break;
-      case "removed":
-        data = data.filter((item) => item.id !== doc.id);
-        break;
-      default:
-        break;
-    }
-  });
-
-  update(data);
-});
+export { update, data };
